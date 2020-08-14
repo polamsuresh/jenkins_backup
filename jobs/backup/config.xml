@@ -22,7 +22,8 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>https://github.com/polamsuresh/jenkins_backup.git</url>
+        <url>git@github.com:polamsuresh/jenkins_backup.git</url>
+        <credentialsId>git-cred</credentialsId>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
@@ -67,7 +68,7 @@ fi
 
 git commit -m "Automated Jenkins commit"
 
-git push -q -u origin master</command>
+git push -q -u my_backup_repo</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
