@@ -1,0 +1,104 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?><project>
+  <actions/>
+  <description>&lt;table&gt;&lt;tr&gt;&lt;td&gt;dev&lt;/td&gt;&lt;td&gt; https://dspro-tw-dev.vorwerk.org/&lt;/td&gt;&lt;/tr&gt;&#13;
+&lt;tr&gt;&lt;td&gt;qa&lt;/td&gt;&lt;td&gt; https://dspro-tw-qa.vorwerk.org/&lt;/td&gt;&lt;/tr&gt;&#13;
+  &lt;tr&gt;&lt;td&gt;uat1&lt;/td&gt;&lt;td&gt; https://dspro-tw-uat1.vorwerk.org/&lt;/td&gt;&lt;/tr&gt;&#13;
+  &lt;tr&gt;&lt;td&gt;uat2&lt;/td&gt;&lt;td&gt; https://dspro-tw-uat2.vorwerk.org/&lt;/td&gt;&lt;/tr&gt;&#13;
+  &lt;tr&gt;&lt;td&gt;sandbox&lt;/td&gt;&lt;td&gt; https://dspro-tw-sbox.vorwerk.org/&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&#13;
+Server Usage :vorwerk development</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="git-parameter@0.9.12">
+          <name>BRANCH</name>
+          <description/>
+          <uuid>597a0b19-abab-4c12-bf63-8b9a6422bc73</uuid>
+          <type>PT_BRANCH</type>
+          <branch/>
+          <tagFilter>*</tagFilter>
+          <branchFilter>.*</branchFilter>
+          <sortMode>NONE</sortMode>
+          <defaultValue/>
+          <selectedValue>NONE</selectedValue>
+          <quickFilterEnabled>true</quickFilterEnabled>
+          <listSize>5</listSize>
+        </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>ENVIRONMENT</name>
+          <description>&lt;b&gt;Choose environment where you are deploying build&lt;/b&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>--NONE--</string>
+              <string>DEV</string>
+              <string>QA</string>
+              <string>QA2</string>
+              <string>SBOX</string>
+              <string>UAT1</string>
+              <string>UAT2</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.3.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/githubtraining/hellogitworld.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${BRANCH}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+USER=admin
+if [[ "$ENVIRONMENT" == 'DEV' ]];then 
+HOSTIP=10.1.0.22
+elif [[ "$ENVIRONMENT" == 'QA' ]];then
+HOSTIP=10.1.0.27
+elif [[ "$ENVIRONMENT" == 'QA2' ]];then
+HOSTIP=10.1.0.28
+elif [[ "$ENVIRONMENT" == 'SBOX' ]];then
+HOSTIP=10.1.0.29
+elif [ $ENVIRONMENT == 'UAT1' ];then
+HOSTIP=10.2.0.27
+elif [ $ENVIRONMENT == 'UAT2' ];then
+HOSTIP=10.2.0.29
+fi
+echo "------------------------------------------------"
+echo "......Deploying to $HOSTIP for $ENVIRONMENT......"
+echo "------------------------------------------------"</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder plugin="groovy-postbuild@2.5">
+      <script plugin="script-security@1.74">
+        <script>
+if(manager.build.result.isBetterOrEqualTo(hudson.model.Result.UNSTABLE)) {
+    manager.addShortText("${manager.build.buildVariables.get('ENVIRONMENT')}")
+}</script>
+        <sandbox>false</sandbox>
+      </script>
+      <behavior>0</behavior>
+      <runForMatrixParent>false</runForMatrixParent>
+    </org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder>
+  </publishers>
+  <buildWrappers/>
+</project>

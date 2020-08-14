@@ -1,0 +1,75 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?><project>
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.security.AuthorizationMatrixProperty>
+      <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy"/>
+      <permission>hudson.model.Item.Build:kiran</permission>
+      <permission>hudson.model.Item.Build:pratap</permission>
+      <permission>hudson.model.Item.Configure:kiran</permission>
+      <permission>hudson.model.Item.Configure:pratap</permission>
+      <permission>hudson.model.Item.Read:kiran</permission>
+      <permission>hudson.model.Item.Read:pratap</permission>
+      <permission>hudson.model.Item.Workspace:kiran</permission>
+      <permission>hudson.model.Item.Workspace:pratap</permission>
+      <permission>hudson.model.Run.Delete:kiran</permission>
+      <permission>hudson.model.Run.Delete:pratap</permission>
+    </hudson.security.AuthorizationMatrixProperty>
+    
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.3.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/polamsuresh/jenkins_backup.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+# Jenkins Configuraitons Directory
+cd /var/lib/jenkins
+
+# Add general configurations, job configurations, and user content
+git add -- *.xml jobs/*/*.xml userContent/*
+
+# only add user configurations if they exist
+if [ -d users ]; then
+    user_configs=`ls users/*/config.xml`
+
+    if [ -n "$user_configs" ]; then
+        git add $user_configs
+    fi
+fi
+
+# mark as deleted anything that's been, well, deleted
+to_remove=`git status | grep "deleted" | awk '{print $3}'`
+
+if [ -n "$to_remove" ]; then
+    git rm --ignore-unmatch $to_remove
+fi
+
+git commit -m "Automated Jenkins commit"
+
+git push -q -u origin master</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

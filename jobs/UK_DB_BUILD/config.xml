@@ -1,0 +1,115 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?><project>
+  <actions/>
+  <description>B Scripts executed Based on the selected server build&#13;
+Server Usage : QA team use this for testing</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="git-parameter@0.9.12">
+          <name>BRANCH</name>
+          <description/>
+          <uuid>f3e8c054-71f0-4b94-bd23-cd2ffa05bf77</uuid>
+          <type>PT_BRANCH</type>
+          <branch/>
+          <tagFilter>*</tagFilter>
+          <branchFilter>.*</branchFilter>
+          <sortMode>NONE</sortMode>
+          <defaultValue/>
+          <selectedValue>NONE</selectedValue>
+          <quickFilterEnabled>true</quickFilterEnabled>
+          <listSize>5</listSize>
+        </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>ENVIRONMENT</name>
+          <description>&lt;b&gt;Choose environment where you are deploying build&lt;/b&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>--NONE--</string>
+              <string>DEV</string>
+              <string>QA</string>
+              <string>QA2</string>
+              <string>SBOX</string>
+              <string>UAT1</string>
+              <string>UAT2</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.3.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/githubtraining/hellogitworld.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${BRANCH}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+USER=admin
+if [[ "$ENVIRONMENT" == 'DEV' ]];then 
+server=10.1.0.22
+elif [[ "$ENVIRONMENT" == 'QA' ]];then
+server=10.1.0.27
+elif [[ "$ENVIRONMENT" == 'QA2' ]];then
+server=10.1.0.28
+elif [[ "$ENVIRONMENT" == 'SBOX' ]];then
+server=10.1.0.29
+elif [ $ENVIRONMENT == 'UAT1' ];then
+server=10.2.0.27
+elif [ $ENVIRONMENT == 'UAT2' ];then
+server=10.2.0.29
+fi
+echo "------------------------------------------------"
+echo "......Deploying to $HOSTIP for $ENVIRONMENT......"
+echo "------------------------------------------------"
+cd ${WORKSPACE}/resources/
+                        cat &lt;&lt;&lt;' 
+                        db_drop.sql
+                        db_create.sql
+                        schema.sql
+                        vwuk_schema.sql
+                        config-db.sql
+                        config-schema.sql
+                        config.sql' &gt;list_of_sqls
+                        
+                        for filename in $(cat $WORKSPACE/resources/list_of_sqls);do
+                        echo "executing on $filename:::"
+                        #sed "s/localhost/$server/" $filename &gt; "$server"_"$filename"
+                        #bash /apps/orientdb/bin/console.sh "$server"_"$filename"
+                        done</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder plugin="groovy-postbuild@2.5">
+      <script plugin="script-security@1.74">
+        <script>
+if(manager.build.result.isBetterOrEqualTo(hudson.model.Result.UNSTABLE)) {
+    manager.addShortText("${manager.build.buildVariables.get('ENVIRONMENT')}")
+}</script>
+        <sandbox>false</sandbox>
+      </script>
+      <behavior>0</behavior>
+      <runForMatrixParent>false</runForMatrixParent>
+    </org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder>
+  </publishers>
+  <buildWrappers/>
+</project>
